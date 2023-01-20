@@ -6,51 +6,55 @@ const chatContainer = document.querySelector("#chat_container");
 
 let loadInterval;
 
-const loader = (element)=>{
-     element.textContent = "";
+function loader(element) {
+  element.textContent = "";
 
-     let loadInterval = setInterval(()=>{
-          element.textContent +=".";
+  loadInterval = setInterval(() => {
+    element.textContent += ".";
 
-          if(element.textContent === '....'){
-               element.textContent = '';
-          }
-     },300)
+    if (element.textContent === "....") {
+      element.textContent = "";
+    }
+  }, 300);
 }
 
-const typeText = (element,text)=>{
+function typeText(element, text){
      let index= 0;
+
      let interval =  setInterval(()=>{
           if(index < text.length){
-               element.innerHtml += text.charAt(index);
+               element.innerHTML += text.charAt(index);
                index++;
           }else{
                clearInterval(interval);
           }
-     },20)
+     },20);
 }
 
-const generateUniqueId = () =>{
+function generateUniqueId(){
      const timestamp = Date.now();
      const randomNumber = Math.random();
-     const hexdecimalString  = randomNumber.toString(16);
+     const hexadecimalString  = randomNumber.toString(16);
 
-     return `id-${timestamp}-${hexdecimalString}`
+     return `id-${timestamp}-${hexadecimalString}`;
 }
 
-const chatStripe = (isAi,value,uniqueId) => {
+function chatStripe(isAi, value, uniqueId){
      return (
-          `
-               <div class="wrapper ${isAi && "ai"}">
-                    <div class="chat">
-                         <div class="profile">
-                              <img src="${isAi ? bot : user}" alt="${isAi ? 'bot' : 'user'}" />
-                         </div
-                         <div class="message" id=${uniqueId}>${value}</div>
-                    </div     
-               </div>
-          `
-     );
+     `
+      <div class="wrapper ${isAi && "ai"}">
+        <div class="chat">
+          <div class="profile">
+            <img 
+              src="${isAi ? bot : user}"
+              alt="${isAi ? "bot" : "user"}"
+            />
+          </div>
+          <div class="message" id=${uniqueId}>${value}</div>
+        </div>
+      </div>
+    `
+    );
 }
 
 const handleSubmit = async (e) => {
@@ -58,14 +62,15 @@ const handleSubmit = async (e) => {
 
      const data  = new FormData(form);
 
-     //users chatStripe 
+     // user's chatStripe 
      chatContainer.innerHTML += chatStripe(false, data.get('prompt'));
 
      form.reset();
 
      // bot's chatStripe
      const uniqueId = generateUniqueId();
-     chatContainer.innerHTML += chatStripe(true," ",uniqueId);
+
+     chatContainer.innerHTML += chatStripe(true, " ", uniqueId);
 
      chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -73,9 +78,35 @@ const handleSubmit = async (e) => {
 
      loader(messageDiv);
 
+     // fetch data from server
+     const response = await fetch('http://localhost:5000',{
+          method: 'POST',
+          headers:{
+               'content-Type':'application/json'
+          },
+          body: JSON.stringify({
+               prompt: data.get('prompt')
+          })
+     })
+
+     clearInterval(loadInterval);
+     messageDiv.innerHTML= '';
+
+     if(response.ok){
+          const data = await response.json();
+          const parsedData = data.bot.trim();
+          console.log("1",parsedData)
+          typeText(messageDiv, parsedData);
+     }else{
+          const err =  await response.text();
+
+          messageDiv.innerHTML = "Something went wrong"
+          alert(err);
+     }
+
 }
 
-form.addEventListener("submit",handleSubmit);
+form.addEventListener('submit',handleSubmit);
 form.addEventListener('keyup',(e)=>{
      if(e.keyCode === 13){
           // keycode 13 is enter key

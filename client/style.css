@@ -44,6 +44,7 @@ body {
   display: none;
 }
 
+
 .wrapper {
   width: 100%;
   padding: 15px;
@@ -118,6 +119,7 @@ form {
   margin: 0 auto;
   padding: 10px;
   background: #40414F;
+  border-radius: 5px;
 
   display: flex;
   flex-direction: row;
@@ -147,4 +149,5 @@ button {
 form img {
   width: 30px;
   height: 30px;
+  
 }
